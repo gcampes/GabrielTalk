@@ -9,23 +9,38 @@ import {
   AppRegistry,
   StyleSheet,
   Text,
-  View
+  View,
+  Image,
 } from 'react-native';
+
+import {
+  getTheme,
+  MKTextField,
+  MKColor
+} from 'react-native-material-kit';
+
+const theme = getTheme();
 
 export default class GabrielTalk extends Component {
   render() {
     return (
-      <View style={styles.container}>
-        <Text style={styles.welcome}>
-          Welcome to Pão de Batata
+      <View style={theme.cardStyle}>
+        <Text style={theme.cardTitleStyle}>Welcome</Text>
+        <Text style={theme.cardContentStyle}>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+          Mauris sagittis pellentesque lacus eleifend lacinia...
         </Text>
-        <Text style={styles.instructions}>
-          To get started, edit index.ios.js
-        </Text>
-        <Text style={styles.instructions}>
-          Press Cmd+R to reload,{'\n'}
-          Cmd+D or shake for dev menu
-        </Text>
+        <View style={theme.cardMenuStyle}>
+          <Text>
+            abc
+          </Text>
+        </View>
+        <MKTextField
+            tintColor={MKColor.Lime}
+            textInputStyle={{color: MKColor.Orange}}
+            placeholder="Text…"
+            style={styles.textfield}
+          />
       </View>
     );
   }
