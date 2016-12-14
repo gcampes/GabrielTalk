@@ -14,55 +14,44 @@ import {
 } from 'react-native';
 
 import {
-  getTheme,
-  MKTextField,
-  MKColor
+  MKColor,
 } from 'react-native-material-kit';
 
-const theme = getTheme();
+import {Scene, Router} from 'react-native-router-flux';
+
+import RoomSelect from './src/components/room-select/';
+import Call from './src/components/call/';
+
+const styles = StyleSheet.create({
+  navBar: {
+    backgroundColor: MKColor.LightBlue,
+  },
+  navBarTitle:{
+      color: '#FFFFFF'
+  },
+  barButtonTextStyle:{
+      color: '#FFFFFF'
+  },
+  barButtonIconStyle:{
+      tintColor: '#FFFFFF'
+  },
+});
 
 export default class GabrielTalk extends Component {
   render() {
     return (
-      <View style={theme.cardStyle}>
-        <Text style={theme.cardTitleStyle}>Welcome</Text>
-        <Text style={theme.cardContentStyle}>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-          Mauris sagittis pellentesque lacus eleifend lacinia...
-        </Text>
-        <View style={theme.cardMenuStyle}>
-          <Text>
-            abc
-          </Text>
-        </View>
-        <MKTextField
-            tintColor={MKColor.Lime}
-            textInputStyle={{color: MKColor.Orange}}
-            placeholder="Text…"
-            style={styles.textfield}
-          />
-      </View>
+      <Router
+        navigationBarStyle={styles.navBar}
+        titleStyle={styles.navBarTitle}
+        barButtonTextStyle={styles.barButtonTextStyle}
+        barButtonIconStyle={styles.barButtonIconStyle}>
+        <Scene key="root">
+          <Scene key="roomSelect" component={RoomSelect} title="Home"/>
+          <Scene key="callArea" component={Call} title="Call" initial={true}/>
+        </Scene>
+      </Router>
     );
   }
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#323232',
-  },
-  welcome: {
-    fontSize: 20,
-    textAlign: 'center',
-    margin: 10,
-  },
-  instructions: {
-    textAlign: 'center',
-    color: '#333333',
-    marginBottom: 5,
-  },
-});
 
 AppRegistry.registerComponent('GabrielTalk', () => GabrielTalk);
