@@ -58,6 +58,7 @@ const styles = StyleSheet.create({
 
 import socket from '../../apis/socket';
 import messages from '../../apis/messages';
+import webrtc from '../../apis/webrtc';
 
 export default class RoomSelect extends Component {
   constructor(props) {
@@ -67,6 +68,7 @@ export default class RoomSelect extends Component {
       thirdStatusMessage: 'Doing stuff',
       secondStatusMessage: 'Loading something',
       statusMessage: 'Things Loaded, App Starting',
+      stream: undefined,
     }
   }
 
@@ -75,13 +77,20 @@ export default class RoomSelect extends Component {
       this.setStatusMessage('Initializing socket connection');
       socket.init()
         .then(() => this.setStatusMessage('Socket Connection ready'))
+        .then(() => webrtc.getLocalStream())
+        .catch((err) => console.log('DOM EXCEPTION (?)', err))
+        .then(stream => this.setPromisedState({ stream }))
+        .then(() => this.setStatusMessage('Setting Local Stream'))
         .then(() => this.setStatusMessage('Sending Login Message'))
         .then(() => this.setStatusMessage('Waiting for Login Message Response'))
         .then(() => this.sendLoginMessage())
-        .then(message => this.setStatusMessage('Login Message Received', { passthrough: message}))
+        .then(message => this.setStatusMessage('Server Answered Login', { passthrough: message}))
         .then(this.handleLoginResponse)
         .catch(err => this.setStatusMessage(err, { reject: true }))
         .then(() => this.setStatusMessage('All good, you\'re Authenticated'))
+        .then(() => this.setStatusMessage('Creating PeerConnection'))
+        .then(() => webrtc.createPeerConnection(1, 2, 3, this.state.stream))
+        .catch(err => console.log(err));
     }, 5000);
   }
 
@@ -113,6 +122,12 @@ export default class RoomSelect extends Component {
           });
         })
       }, 500);
+    });
+  }
+
+  setPromisedState(obj) {
+    return new Promise(resolve => {
+      this.setState(obj, resolve());
     });
   }
 
