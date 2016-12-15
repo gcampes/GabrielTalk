@@ -16,21 +16,22 @@ import {
 
 const styles = StyleSheet.create({
   container: {
-    flex:1,
-    flexDirection:'row',
-    alignItems:'center',
-    justifyContent:'center',
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: '#323232',
   },
   form: {
-    alignItems:'center',
-    justifyContent:'center',
-    flexDirection:'column',
-    flex:1,
-    width:300,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'column',
+    flex: 1,
+    width: 300,
   },
   progress: {
     width: 200,
+
     //height: 2,
   },
   legendLabel: {
@@ -69,7 +70,7 @@ export default class RoomSelect extends Component {
       secondStatusMessage: 'Loading something',
       statusMessage: 'Things Loaded, App Starting',
       stream: undefined,
-    }
+    };
   }
 
   componentDidMount() {
@@ -84,14 +85,18 @@ export default class RoomSelect extends Component {
         .then(() => this.setStatusMessage('Sending Login Message'))
         .then(() => this.setStatusMessage('Waiting for Login Message Response'))
         .then(() => this.sendLoginMessage())
-        .then(message => this.setStatusMessage('Server Answered Login', { passthrough: message}))
+        .then(message => this.setStatusMessage('Server Answered Login', { passthrough: message }))
         .then(this.handleLoginResponse)
         .catch(err => this.setStatusMessage(err, { reject: true }))
         .then(() => this.setStatusMessage('All good, you\'re Authenticated'))
         .then(() => this.setStatusMessage('Creating PeerConnection'))
         .then(() => webrtc.createPeerConnection(1, 2, 3, this.state.stream))
-        .catch(err => console.log(err));
-    }, 5000);
+        .then(message => this.setStatusMessage('PeerConnection Created', { passthrough: message }))
+        .then(message => this.setStatusMessage('Ice Candidates Received', { passthrough: message }))
+        .then(message => this.setStatusMessage('Sending SDP to Server', { passthrough: message }))
+        .then(() => webrtc.getSdp())
+        .then(() => this.setStatusMessage('ABC'));
+    }, 2000);
   }
 
   setStatusMessage(newMessage, options) {
@@ -112,15 +117,16 @@ export default class RoomSelect extends Component {
             secondStatusMessage: this.state.statusMessage,
           }, () => {
             this.setState({
-              statusMessage: newMessage
+              statusMessage: newMessage,
             }, () => {
               if (shouldReject) {
                 return reject();
               }
+
               return resolve(passthrough);
             });
           });
-        })
+        });
       }, 500);
     });
   }
@@ -141,8 +147,9 @@ export default class RoomSelect extends Component {
       if (response.error) {
         return reject(`Error: ${response.error.message}`);
       }
+
       return resolve();
-    })
+    });
   }
 
   render() {
@@ -158,6 +165,6 @@ export default class RoomSelect extends Component {
           <Text style={styles.legendLabel}>{this.state.statusMessage}</Text>
         </View>
       </View>
-    )
+    );
   }
 }

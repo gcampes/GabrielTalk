@@ -12,6 +12,7 @@
     "react-native-material-kit": "^0.3.3",
     "react-native-router-flux": "^3.37.0",
     "react-native-webrtc": "^0.54.3",
+    "sdp-transform": "^1.7.0",
     "winston": "^2.3.0"
   },
   "devDependencies": {
