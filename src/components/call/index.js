@@ -14,6 +14,10 @@ import {
   MKProgress,
 } from 'react-native-material-kit';
 
+import {
+  RTCView
+} from 'react-native-webrtc';
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -55,6 +59,11 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '300',
   },
+
+  remoteView: {
+    width: 400,
+    height: 300,
+  },
 });
 
 import socket from '../../apis/socket';
@@ -85,7 +94,7 @@ export default class RoomSelect extends Component {
         .then(() => this.setStatusMessage('Sending Login Message'))
         .then(() => this.setStatusMessage('Waiting for Login Message Response'))
         .then(() => this.sendLoginMessage())
-        .then(message => this.setStatusMessage('Server Answered Login', { passthrough: message }))
+        .then(message => this.setStatusMessage('Server Answered Login Message', { passthrough: message }))
         .then(this.handleLoginResponse)
         .catch(err => this.setStatusMessage(err, { reject: true }))
         .then(() => this.setStatusMessage('All good, you\'re Authenticated'))
@@ -93,19 +102,32 @@ export default class RoomSelect extends Component {
         .then(() => webrtc.createPeerConnection(1, 2, 3, this.state.stream))
         .then(message => this.setStatusMessage('PeerConnection Created', { passthrough: message }))
         .then(message => this.setStatusMessage('Ice Candidates Received', { passthrough: message }))
-        .then(message => this.setStatusMessage('Sending SDP to Server', { passthrough: message }))
+        .then(message => this.setStatusMessage('Feeding SDP with Candidates', { passthrough: message }))
         .then(() => webrtc.getSdp())
-        .then(() => this.setStatusMessage('ABC'));
+        .then(message => this.setStatusMessage('Sending SDP Message', { passthrough: message }))
+        .then(message => this.setStatusMessage('Waiting for SDP Message Response', { passthrough: message }))
+        .then(message => this.sendSdpMessage(message))
+        .then(messages => this.setStatusMessage('Server Answered SDP Message', { passthrough: messages }))
+        .then(messages => this.setStatusMessage('Setting Remote SDP in PeerConnection', { passthrough: messages }))
+        .then(messages => webrtc.setRemoteSdp(messages))
+        .then((message) => this.setStatusMessage('SDP Set Successfully!', { passthrough: message }))
+        .catch(err => {
+          console.log('err', err);
+          return this.setStatusMessage('An Error Ocurred When Setting SDP');
+        })
+        .then(message => this.setPromisedState({ streamURL: message}))
     }, 2000);
   }
 
   setStatusMessage(newMessage, options) {
     let passthrough;
     let shouldReject;
+    let timeout;
 
     if (options) {
       passthrough = options.passthrough;
       shouldReject = options.reject;
+      timeout = options.timeout;
     }
 
     return new Promise((resolve, reject) => {
@@ -127,7 +149,7 @@ export default class RoomSelect extends Component {
             });
           });
         });
-      }, 500);
+      }, timeout || 500);
     });
   }
 
@@ -139,6 +161,10 @@ export default class RoomSelect extends Component {
 
   sendLoginMessage() {
     return socket.sendMessage(messages.loginMessage());
+  }
+
+  sendSdpMessage(sdp) {
+    return socket.sendMessage(messages.sdpMessage(sdp));
   }
 
   handleLoginResponse(response) {
@@ -153,17 +179,25 @@ export default class RoomSelect extends Component {
   }
 
   render() {
+    const remoteStream = (
+      <RTCView streamURL={this.state.streamURL} style={styles.remoteView}/>
+    );
+
+    const appStatus = (
+      <View style={styles.form}>
+        <MKProgress.Indeterminate
+          style={styles.progress}
+          progressColor={MKColor.LightBlue}
+        />
+        <Text style={styles.legendLabelMoreFaded}>{this.state.thirdStatusMessage}</Text>
+        <Text style={styles.legendLabelFaded}>{this.state.secondStatusMessage}</Text>
+        <Text style={styles.legendLabel}>{this.state.statusMessage}</Text>
+      </View>
+    )
+
     return (
       <View style={styles.container}>
-        <View style={styles.form}>
-          <MKProgress.Indeterminate
-            style={styles.progress}
-            progressColor={MKColor.LightBlue}
-          />
-          <Text style={styles.legendLabelMoreFaded}>{this.state.thirdStatusMessage}</Text>
-          <Text style={styles.legendLabelFaded}>{this.state.secondStatusMessage}</Text>
-          <Text style={styles.legendLabel}>{this.state.statusMessage}</Text>
-        </View>
+        {this.state.streamURL ? remoteStream : appStatus}
       </View>
     );
   }

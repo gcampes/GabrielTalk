@@ -2,6 +2,7 @@ import {
   RTCPeerConnection,
   MediaStreamTrack,
   getUserMedia,
+  RTCSessionDescription,
 } from 'react-native-webrtc';
 
 import sdpTransform from 'sdp-transform';
@@ -19,6 +20,7 @@ const iceServers = {
 let videoCandidates = [];
 let audioCandidates = [];
 let pc = undefined;
+let onAddStreamResponse;
 
 const createPeerConnection = (socket, socketId, isOffer, stream) => {
   return new Promise((resolve, reject) => {
@@ -27,9 +29,9 @@ const createPeerConnection = (socket, socketId, isOffer, stream) => {
 
     function createOffer() {
       console.log('Starting createOffer');
-      pc.createOffer(function(desc) {
+      pc.createOffer((desc) => {
         console.log('createOffer', desc);
-        pc.setLocalDescription(desc, function () {
+        pc.setLocalDescription(desc, () => {
           console.log('setLocalDescription', pc.localDescription);
         }, err => console.log(err));
       }, err => console.log(err));
@@ -42,9 +44,9 @@ const createPeerConnection = (socket, socketId, isOffer, stream) => {
       const candidate = event.candidate;
       if (candidate && candidate.sdpMid === 'audio') {
         console.log('parsed', sdpTransform.parse(candidate.candidate));
-        audioCandidates.push(candidate.candidate);
+        audioCandidates.push(`a=${candidate.candidate}`);
       } else if (candidate && candidate.sdpMid === 'video') {
-        videoCandidates.push(candidate.candidate);
+        videoCandidates.push(`a=${candidate.candidate}`);
       }
       // console.log(pc.localDescription);
       // if (event.candidate) {
@@ -66,7 +68,10 @@ const createPeerConnection = (socket, socketId, isOffer, stream) => {
     };
 
     pc.onaddstream = function (event) {
-      console.log('EVENT PROPRIO', event);
+      console.log('on add stream', event);
+
+      onAddStreamResponse = event.stream.toURL();
+
       // console.log('onaddstream', event.stream);
       // container.setState({info: 'One peer join!'});
       //
@@ -116,10 +121,36 @@ const getSdp = () => {
   console.log('Getting Sdp');
   const sdp = pc.localDescription.sdp;
 
-  console.log(sdp, audioCandidates, videoCandidates);
+  const splitSdp = sdp.split('m=video');
+
+  const transformedSdp = [
+    splitSdp[0],
+    audioCandidates.join('\r\n'),
+    '\r\nm=video',
+    splitSdp[1],
+    videoCandidates.join('\r\n')
+  ].join('');
+
+  console.log(sdp);
+  console.log(transformedSdp);
 
   return new Promise((resolve, reject) => {
-    return resolve();
+    return resolve(transformedSdp);
+  });
+}
+
+const setRemoteSdp = (messages) => {
+  console.log('Set Remote SDP');
+  const answerMessage = messages.find(m => m.method === 'verto.answer');
+  let remoteSdp = new RTCSessionDescription({
+    sdp: answerMessage.params.sdp,
+    type: 'answer'
+  });
+
+  return new Promise((resolve, reject) => {
+    pc.setRemoteDescription(remoteSdp,
+      () => resolve(onAddStreamResponse),
+      (err) => reject(err));
   })
 }
 
@@ -127,4 +158,5 @@ export default {
   createPeerConnection,
   getLocalStream,
   getSdp,
+  setRemoteSdp
 };
