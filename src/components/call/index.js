@@ -75,81 +75,75 @@ export default class RoomSelect extends Component {
     super(props);
 
     this.state = {
-      thirdStatusMessage: 'Doing stuff',
-      secondStatusMessage: 'Loading something',
-      statusMessage: 'Things Loaded, App Starting',
+      statusMessage: [
+        'Things Loaded, App Starting',
+        'Loading something',
+        'Doing stuff',
+      ],
       stream: undefined,
     };
   }
 
   componentDidMount() {
-    setTimeout(() => {
-      this.setStatusMessage('Initializing socket connection');
-      socket.init()
-        .then(() => this.setStatusMessage('Socket Connection ready'))
-        .then(() => webrtc.getLocalStream())
-        .catch((err) => console.log('DOM EXCEPTION (?)', err))
-        .then(stream => this.setPromisedState({ stream }))
-        .then(() => this.setStatusMessage('Setting Local Stream'))
-        .then(() => this.setStatusMessage('Sending Login Message'))
-        .then(() => this.setStatusMessage('Waiting for Login Message Response'))
-        .then(() => this.sendLoginMessage())
-        .then(message => this.setStatusMessage('Server Answered Login Message', { passthrough: message }))
-        .then(this.handleLoginResponse)
-        .catch(err => this.setStatusMessage(err, { reject: true }))
-        .then(() => this.setStatusMessage('All good, you\'re Authenticated'))
-        .then(() => this.setStatusMessage('Creating PeerConnection'))
-        .then(() => webrtc.createPeerConnection(1, 2, 3, this.state.stream))
-        .then(message => this.setStatusMessage('PeerConnection Created', { passthrough: message }))
-        .then(message => this.setStatusMessage('Ice Candidates Received', { passthrough: message }))
-        .then(message => this.setStatusMessage('Feeding SDP with Candidates', { passthrough: message }))
-        .then(() => webrtc.getSdp())
-        .then(message => this.setStatusMessage('Sending SDP Message', { passthrough: message }))
-        .then(message => this.setStatusMessage('Waiting for SDP Message Response', { passthrough: message }))
-        .then(message => this.sendSdpMessage(message))
-        .then(messages => this.setStatusMessage('Server Answered SDP Message', { passthrough: messages }))
-        .then(messages => this.setStatusMessage('Setting Remote SDP in PeerConnection', { passthrough: messages }))
-        .then(messages => webrtc.setRemoteSdp(messages))
-        .then((message) => this.setStatusMessage('SDP Set Successfully!', { passthrough: message }))
-        .catch(err => {
-          console.log('err', err);
-          return this.setStatusMessage('An Error Ocurred When Setting SDP');
-        })
-        .then(message => this.setPromisedState({ streamURL: message}))
-    }, 2000);
+    // setTimeout(() => {
+      this.startCall();
+    // }, 0);
+  }
+
+  startCall(options) {
+    this.setStatusMessage('Initializing socket connection');
+    socket.init()
+      .then(() => this.setStatusMessage('Socket Connection ready'))
+      .then(() => webrtc.getLocalStream())
+      .catch((err) => console.log('DOM EXCEPTION (?)', err))
+      .then(stream => this.setPromisedState({ stream }))
+      .then(() => this.setStatusMessage('Setting Local Stream'))
+      .then(() => this.setStatusMessage('Sending Login Message'))
+      .then(() => this.setStatusMessage('Waiting for Login Message Response'))
+      .then(() => this.sendLoginMessage())
+      .then(message => this.setStatusMessage('Server Answered Login Message', { passthrough: message }))
+      .then(this.handleLoginResponse)
+      .catch(err => this.setStatusMessage(err, { reject: true }))
+      .then(() => this.setStatusMessage('All good, you\'re Authenticated'))
+      .then(() => this.setStatusMessage('Creating PeerConnection'))
+      .then(() => webrtc.createPeerConnection(1, 2, 3, this.state.stream))
+      .then(message => this.setStatusMessage('PeerConnection Created', { passthrough: message }))
+      .then(message => this.setStatusMessage('Ice Candidates Received', { passthrough: message }))
+      .then(message => this.setStatusMessage('Feeding SDP with Candidates', { passthrough: message }))
+      .then(() => webrtc.getSdp())
+      .then(message => this.setStatusMessage('Sending SDP Message', { passthrough: message }))
+      .then(message => this.setStatusMessage('Waiting for SDP Message Response', { passthrough: message }))
+      .then(message => this.sendSdpMessage(message))
+      .then(messages => this.setStatusMessage('Server Answered SDP Message', { passthrough: messages }))
+      .then(messages => this.setStatusMessage('Setting Remote SDP in PeerConnection', { passthrough: messages }))
+      .then(messages => webrtc.setRemoteSdp(messages))
+      .then((message) => this.setStatusMessage('SDP Set Successfully!', { passthrough: message }))
+      .catch(err => {
+        console.log('err', err);
+        return this.setStatusMessage('An Error Ocurred When Setting SDP');
+      })
+      .then(message => this.setPromisedState({ streamURL: message}))
   }
 
   setStatusMessage(newMessage, options) {
-    let passthrough;
-    let shouldReject;
-    let timeout;
-
-    if (options) {
-      passthrough = options.passthrough;
-      shouldReject = options.reject;
-      timeout = options.timeout;
-    }
+    let passthrough = options ? options.passthrough : undefined;
+    let shouldReject = options ? options.reject : undefined;
+    let timeout = options ? options.timeout : undefined;
 
     return new Promise((resolve, reject) => {
-      setTimeout(() => {
+      // setTimeout(() => {
+        let newStatusMessage = this.state.statusMessage;
+        newStatusMessage.unshift(newMessage);
         this.setState({
-          thirdStatusMessage: this.state.secondStatusMessage,
+          statusMessage: newStatusMessage,
         }, () => {
-          this.setState({
-            secondStatusMessage: this.state.statusMessage,
-          }, () => {
-            this.setState({
-              statusMessage: newMessage,
-            }, () => {
-              if (shouldReject) {
-                return reject();
-              }
+          if (shouldReject) {
+            return reject();
+          }
 
-              return resolve(passthrough);
-            });
-          });
+          return resolve(passthrough);
         });
-      }, timeout || 500);
+      // }, timeout || 500);
     });
   }
 
@@ -189,9 +183,9 @@ export default class RoomSelect extends Component {
           style={styles.progress}
           progressColor={MKColor.LightBlue}
         />
-        <Text style={styles.legendLabelMoreFaded}>{this.state.thirdStatusMessage}</Text>
-        <Text style={styles.legendLabelFaded}>{this.state.secondStatusMessage}</Text>
-        <Text style={styles.legendLabel}>{this.state.statusMessage}</Text>
+      <Text style={styles.legendLabelMoreFaded}>{this.state.statusMessage[2]}</Text>
+        <Text style={styles.legendLabelFaded}>{this.state.statusMessage[1]}</Text>
+        <Text style={styles.legendLabel}>{this.state.statusMessage[0]}</Text>
       </View>
     )
 

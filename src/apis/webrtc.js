@@ -102,11 +102,11 @@ const getLocalStream = (isFront) => {
         audio: true,
         // video: {
         //   mandatory: {
-        //     minWidth: 500,
+        //     minWidth: 5000,
         //     minHeight: 300,
-        //     minFrameRate: 30
+        //     minFrameRate: 900
         //   },
-        //   facingMode: (isFront ? "user" : "environment"),
+        //   facingMode: "user",
         //   optional: [{ sourceId: sourceInfos.id }]
         // }
       }, (stream) => {
