@@ -19,7 +19,7 @@ import {
 
 import {Scene, Router} from 'react-native-router-flux';
 
-import RoomSelect from './src/components/room-select/';
+import Settings from './src/components/settings/';
 import Call from './src/components/call/';
 
 const styles = StyleSheet.create({
@@ -46,8 +46,8 @@ export default class GabrielTalk extends Component {
         barButtonTextStyle={styles.barButtonTextStyle}
         barButtonIconStyle={styles.barButtonIconStyle}>
         <Scene key="root">
-          <Scene key="roomSelect" component={RoomSelect} title="Home"/>
-          <Scene key="callArea" component={Call} title="Call" initial={true}/>
+          <Scene key="Settings" component={Settings} title="Settings" initial={true}/>
+          <Scene key="callArea" component={Call} title="Call"/>
         </Scene>
       </Router>
     );

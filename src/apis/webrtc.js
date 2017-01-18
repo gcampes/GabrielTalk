@@ -140,7 +140,7 @@ const getSdp = () => {
 }
 
 const setRemoteSdp = (messages) => {
-  console.log('Set Remote SDP');
+  console.log('Set Remote SDP', messages);
   const answerMessage = messages.find(m => m.method === 'verto.answer');
   let remoteSdp = new RTCSessionDescription({
     sdp: answerMessage.params.sdp,

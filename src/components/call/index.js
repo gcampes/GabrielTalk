@@ -74,12 +74,14 @@ export default class RoomSelect extends Component {
   constructor(props) {
     super(props);
 
+    console.log('4Head', props);
     this.state = {
       statusMessage: [
         'Things Loaded, App Starting',
         'Loading something',
         'Doing stuff',
       ],
+      number: props.number,
       stream: undefined,
     };
   }
@@ -113,7 +115,7 @@ export default class RoomSelect extends Component {
       .then(() => webrtc.getSdp())
       .then(message => this.setStatusMessage('Sending SDP Message', { passthrough: message }))
       .then(message => this.setStatusMessage('Waiting for SDP Message Response', { passthrough: message }))
-      .then(message => this.sendSdpMessage(message))
+      .then(message => this.sendSdpMessage({ sdp: message, number: this.state.number }))
       .then(messages => this.setStatusMessage('Server Answered SDP Message', { passthrough: messages }))
       .then(messages => this.setStatusMessage('Setting Remote SDP in PeerConnection', { passthrough: messages }))
       .then(messages => webrtc.setRemoteSdp(messages))
@@ -131,7 +133,7 @@ export default class RoomSelect extends Component {
     let timeout = options ? options.timeout : undefined;
 
     return new Promise((resolve, reject) => {
-      // setTimeout(() => {
+      setTimeout(() => {
         let newStatusMessage = this.state.statusMessage;
         newStatusMessage.unshift(newMessage);
         this.setState({
@@ -143,7 +145,7 @@ export default class RoomSelect extends Component {
 
           return resolve(passthrough);
         });
-      // }, timeout || 500);
+      }, timeout || 500);
     });
   }
 
